@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Auto">
+<meta name="theme-color" content="#0a0e13">
+<title>Pantalla Auto</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500&display=swap">
+<style>
+/* Diseño: columna lateral con reloj y estado de conexión; a la derecha una rejilla de 4x2 apps y abajo la barra de destino. Pensado para iPad mini 2 en horizontal (1024x768), Safari de iOS 12. */
+:root {
+  --bg: #0a0e13;
+  --panel: #121920;
+  --tile: #172029;
+  --tile-press: #1f2b37;
+  --fg: #eef2f6;
+  --muted: #8a97a6;
+  --line: #243140;
+  --nav: #2fb67c;
+  --video: #ee5a4f;
+  --music: #8468ee;
+  --route: #3b9ae8;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Barlow', -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+.app { display: flex; height: 100%; padding: 16px; }
+
+.side {
+  width: 236px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-right: 16px;
+  padding: 24px 22px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+}
+.clock {
+  font-family: 'Barlow Condensed', 'Barlow', -apple-system, Arial, sans-serif;
+  font-size: 92px;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+}
+.date { margin-top: 10px; font-size: 19px; color: var(--muted); line-height: 1.3; }
+.net { display: flex; align-items: center; font-size: 17px; line-height: 1.3; }
+.dot { width: 11px; height: 11px; flex: none; margin-right: 10px; border-radius: 50%; background: var(--nav); }
+.net.off .dot { background: var(--video); }
+.hint { margin: 14px 0 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tiles {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-gap: 16px;
+}
+.tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  color: var(--fg);
+  text-decoration: none;
+  background: var(--tile);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+}
+.tile:active { background: var(--tile-press); }
+.tile:focus { outline: 3px solid var(--route); outline-offset: 2px; }
+.ico {
+  width: 96px;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+  border-radius: 25px;
+}
+.ico svg { width: 54px; height: 54px; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.c-nav { background: var(--nav); }
+.c-route { background: var(--route); }
+.c-video { background: var(--video); }
+.c-music { background: var(--music); }
+.tile .name { font-size: 25px; font-weight: 600; line-height: 1.15; }
+.tile .kind { margin-top: 3px; font-size: 15px; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; }
+
+.dest { margin-top: 16px; padding: 16px 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 28px; }
+.row { display: flex; align-items: center; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+#dest {
+  flex: 1;
+  min-width: 0;
+  height: 60px;
+  padding: 0 18px;
+  font: 500 22px 'Barlow', -apple-system, Arial, sans-serif;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+#dest::placeholder { color: var(--muted); }
+#dest:focus { outline: 3px solid var(--route); outline-offset: 1px; }
+.go {
+  flex: none;
+  display: flex;
+  align-items: center;
+  height: 60px;
+  margin-left: 10px;
+  padding: 0 20px;
+  font-size: 19px;
+  font-weight: 600;
+  color: #04120c;
+  text-decoration: none;
+  border-radius: 16px;
+}
+.go:focus { outline: 3px solid #fff; outline-offset: 2px; }
+.go[aria-disabled="true"] { opacity: 0.35; }
+.recent { display: flex; flex-wrap: wrap; margin-top: 12px; }
+.recent button {
+  margin: 0 8px 6px 0;
+  padding: 8px 16px;
+  font: 500 16px 'Barlow', -apple-system, Arial, sans-serif;
+  color: var(--fg);
+  background: var(--tile);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.recent button:focus { outline: 3px solid var(--route); }
+
+@media (max-width: 860px), (orientation: portrait) {
+  html, body { height: auto; min-height: 100%; }
+  .app { flex-direction: column; height: auto; min-height: 100%; }
+  .side { width: auto; margin: 0 0 16px; flex-direction: row; align-items: center; flex-wrap: wrap; }
+  .clock { font-size: 64px; }
+  .hint { display: none; }
+  .tiles { grid-template-columns: repeat(2, 1fr); grid-template-rows: none; grid-auto-rows: 160px; }
+  .row { flex-wrap: wrap; }
+  #dest { flex-basis: 100%; margin-bottom: 10px; }
+  .go { margin: 0 8px 0 0; height: 54px; }
+}
+</style>
+</head>
+<body>
+
+
+<div class="app">
+  <aside class="side">
+    <div>
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date">&nbsp;</div>
+    </div>
+    <div>
+      <div class="net" id="net"><span class="dot"></span><span id="net-text">Conectado a internet</span></div>
+      <p class="hint">Para verla a pantalla completa: Compartir, luego Añadir a pantalla de inicio.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <nav class="tiles" aria-label="Aplicaciones">
+      <a class="tile" href="https://maps.apple.com/" target="_blank" rel="noopener">
+        <span class="ico c-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.4-6.5-10.5a6.5 6.5 0 0 1 13 0C18.5 15.6 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></svg></span>
+        <span class="name">Mapas</span><span class="kind">Navegar</span>
+      </a>
+      <a class="tile" href="https://www.google.com/maps" target="_blank" rel="noopener">
+        <span class="ico c-route"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8.2 18H14a3.2 3.2 0 0 0 0-6.4h-4A3.2 3.2 0 0 1 10 5.2h5.8"/></svg></span>
+        <span class="name">Google Maps</span><span class="kind">Navegar</span>
+      </a>
+      <a class="tile" href="https://www.waze.com/live-map" target="_blank" rel="noopener">
+        <span class="ico c-route"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 17-7-4-7 4z"/></svg></span>
+        <span class="name">Waze</span><span class="kind">Navegar</span>
+      </a>
+      <a class="tile" href="https://open.spotify.com/" target="_blank" rel="noopener">
+        <span class="ico c-music"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6.5l10-2V16"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="16" r="2.2"/></svg></span>
+        <span class="name">Spotify</span><span class="kind">Música</span>
+      </a>
+      <a class="tile" href="https://m.youtube.com/" target="_blank" rel="noopener">
+        <span class="ico c-video"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="4"/><path d="M10 9.4v5.2l4.5-2.6z"/></svg></span>
+        <span class="name">YouTube</span><span class="kind">Video</span>
+      </a>
+      <a class="tile" href="https://music.youtube.com/" target="_blank" rel="noopener">
+        <span class="ico c-video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><path d="M4 15h3v5H4zM17 15h3v5h-3z"/></svg></span>
+        <span class="name">YouTube Music</span><span class="kind">Música</span>
+      </a>
+      <a class="tile" href="https://music.apple.com/" target="_blank" rel="noopener">
+        <span class="ico c-music"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2.6"/></svg></span>
+        <span class="name">Apple Music</span><span class="kind">Música</span>
+      </a>
+      <a class="tile" href="https://podcasts.apple.com/" target="_blank" rel="noopener">
+        <span class="ico c-nav"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></span>
+        <span class="name">Podcasts</span><span class="kind">Audio</span>
+      </a>
+    </nav>
+
+    <form class="dest" id="dest-form" autocomplete="off">
+      <div class="row">
+        <label class="sr" for="dest">Destino</label>
+        <input id="dest" type="search" placeholder="¿A dónde vamos?" autocapitalize="words" autocorrect="off">
+        <a class="go" id="go-apple" style="background:var(--nav)" href="https://maps.apple.com/" target="_blank" rel="noopener" aria-disabled="true">Mapas</a>
+        <a class="go" id="go-google" style="background:var(--route)" href="https://www.google.com/maps" target="_blank" rel="noopener" aria-disabled="true">Google</a>
+        <a class="go" id="go-waze" style="background:#f2b84b" href="https://www.waze.com/live-map" target="_blank" rel="noopener" aria-disabled="true">Waze</a>
+      </div>
+      <div class="recent" id="recent" hidden></div>
+    </form>
+  </main>
+</div>
+
+<script>
+(function () {
+  var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function tick() {
+    var d = new Date();
+    document.getElementById('clock').textContent = pad(d.getHours()) + ':' + pad(d.getMinutes());
+    document.getElementById('date').textContent = DIAS[d.getDay()] + ' ' + d.getDate() + ' de ' + MESES[d.getMonth()];
+  }
+  tick();
+  setInterval(tick, 5000);
+
+  function net() {
+    var on = navigator.onLine !== false;
+    document.getElementById('net').className = 'net' + (on ? '' : ' off');
+    document.getElementById('net-text').textContent = on ? 'Conectado a internet' : 'Sin internet. Revisa el hotspot';
+  }
+  window.addEventListener('online', net);
+  window.addEventListener('offline', net);
+  net();
+
+  var input = document.getElementById('dest');
+  var form = document.getElementById('dest-form');
+  var recentBox = document.getElementById('recent');
+  var links = [
+    { el: document.getElementById('go-apple'), base: 'https://maps.apple.com/', make: function (e) { return 'https://maps.apple.com/?daddr=' + e + '&dirflg=d'; } },
+    { el: document.getElementById('go-google'), base: 'https://www.google.com/maps', make: function (e) { return 'https://www.google.com/maps/dir/?api=1&destination=' + e + '&travelmode=driving'; } },
+    { el: document.getElementById('go-waze'), base: 'https://www.waze.com/live-map', make: function (e) { return 'https://www.waze.com/ul?q=' + e + '&navigate=yes'; } }
+  ];
+  var KEY = 'pantalla-auto-recientes';
+
+  function loadRecent() {
+    try {
+      var r = JSON.parse(localStorage.getItem(KEY) || '[]');
+      return Object.prototype.toString.call(r) === '[object Array]' ? r : [];
+    } catch (e) { return []; }
+  }
+  function saveRecent(q) {
+    var list = loadRecent().filter(function (x) { return x !== q; });
+    list.unshift(q);
+    list = list.slice(0, 4);
+    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
+    renderRecent();
+  }
+  function renderRecent() {
+    var list = loadRecent();
+    recentBox.innerHTML = '';
+    recentBox.hidden = list.length === 0;
+    list.forEach(function (q) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = q;
+      b.addEventListener('click', function () { input.value = q; update(); });
+      recentBox.appendChild(b);
+    });
+  }
+
+  function query() { return input.value.replace(/^\s+|\s+$/g, ''); }
+  function update() {
+    var q = query();
+    var e = encodeURIComponent(q);
+    links.forEach(function (l) {
+      l.el.href = q ? l.make(e) : l.base;
+      l.el.setAttribute('aria-disabled', q ? 'false' : 'true');
+    });
+  }
+  links.forEach(function (l) {
+    l.el.addEventListener('click', function (ev) {
+      var q = query();
+      if (!q) { ev.preventDefault(); input.focus(); return; }
+      saveRecent(q);
+    });
+  });
+  input.addEventListener('input', update);
+  form.addEventListener('submit', function (ev) { ev.preventDefault(); input.blur(); });
+  update();
+  renderRecent();
+})();
+</script>
+
+</body>
+</html>
